@@ -1,0 +1,5 @@
+*.sln
+*.vcxproj*
+*.vs
+*audio.wav
+*x64
