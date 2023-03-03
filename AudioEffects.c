@@ -87,6 +87,27 @@ int WriteWAVHeader(
 	return 0;
 }
 
+void MuteSample(short* sample)
+{
+	(short)*(sample) = 0;
+	(short)*(sample + 1) = 0;
+}
+
+void MuteLeft(short* sample)
+{
+	(short)*(sample) = 0;
+}
+
+void MuteRight(short* sample)
+{
+	(short)*(sample + 1) = 0;
+}
+
+void AddEffectOnSample(short* sample, short(*process)())
+{
+	process(sample);
+}
+
 /*
 int SetHeadToDataStart(
 	FILE* f
@@ -114,7 +135,7 @@ int main(int argc, char** argv)
 
 	WAVHEADER wavh = { 0 };
 
-	void* Buffer = NULL;
+	short* Buffer = NULL;
 
 	char* szFileName = "audio.wav";
 
@@ -127,11 +148,17 @@ int main(int argc, char** argv)
 		// eliminates JUNK wav headers
 		if (memcmp(wavh.subc.Subchunk1Id, "fmt ", sizeof(char) * 4) != 0) return 0;
 
+		fseek(file, 200, SEEK_SET);
+
 		Buffer = GetNextBuffer(file, wavh);
+
+		AddEffectOnSample(Buffer, &MuteSample);
 
 		short sss[2] = { 0 };
 
 		memcpy(sss, Buffer, 2 * sizeof(short));
+
+		free(Buffer);
 
 		fclose(file);
 	}
