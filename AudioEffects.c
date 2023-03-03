@@ -74,6 +74,19 @@ WAVHEADER GetWAVHEADER(
   	return wavh;
 }
 
+int WriteWAVHeader(
+	WAVHEADER *wavh, 
+	char *fname,
+	FILE *f
+)
+{
+	if (f == NULL) return -1;
+	
+	fwrite(wavh, sizeof(WAVHEADER), 1, f);
+
+	return 0;
+}
+
 /*
 int SetHeadToDataStart(
 	FILE* f
@@ -111,10 +124,10 @@ int main(int argc, char** argv)
 	{
 		wavh = GetWAVHEADER(file);
 
-		Buffer = GetNextBuffer(file, wavh);
-
 		// eliminates JUNK wav headers
 		if (memcmp(wavh.subc.Subchunk1Id, "fmt ", sizeof(char) * 4) != 0) return 0;
+
+		Buffer = GetNextBuffer(file, wavh);
 
 		short sss[2] = { 0 };
 
