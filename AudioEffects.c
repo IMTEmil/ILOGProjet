@@ -103,7 +103,7 @@ void MuteRight(short* sample)
 	(short)*(sample + 1) = 0;
 }
 
-void AddEffectOnSample(short* sample, short(*process)())
+void AddEffectOnSample(short* sample, void(*process)())
 {
 	process(sample);
 }
@@ -127,6 +127,15 @@ void *GetNextBuffer(
 	if (Buffer != NULL) fread(Buffer, wavh.subc.BitsPerSample / 8, wavh.subc.NumChannels, f);
 
 	return Buffer;
+}
+
+void WriteWAVFile(char* fname)
+{
+	short *cbuffer = (short*)malloc((size_t)(44100 * 2));
+	uint32_t w_index = 0;
+	uint32_t r_index = 0;
+
+	free(cbuffer);
 }
 
 int main(int argc, char** argv)
