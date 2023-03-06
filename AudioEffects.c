@@ -108,13 +108,6 @@ void AddEffectOnSample(short* sample, void(*process)())
 	process(sample);
 }
 
-int SetHeadToDataStart(
-	FILE* f
-)
-{
-	return fseek(f, 44, SEEK_SET);
-}
-
 short* GetNextBuffer(
 	FILE* f,
 	WAVHEADER wavh,
