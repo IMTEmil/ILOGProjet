@@ -59,17 +59,12 @@ WAVHEADER GetWAVHEADER(
   	return wavh;
 }
 
-int WriteWAVHeaderToFile(
-	WAVHEADER *wavh, 
-	char *fname,
+size_t WriteWAVHeaderToFile(
+	WAVHEADER *wavh,
 	FILE *f
 )
 {
-	if (f == NULL) return -1;
-	
-	fwrite(wavh, sizeof(WAVHEADER), 1, f);
-
-	return 0;
+	return fwrite(wavh, sizeof(WAVHEADER), 1, f);
 }
 
 void MuteLeftChannel(short* sample)
@@ -134,7 +129,7 @@ int CopyWAVFileAddEffect(char* fname, void(*effect)())
 
 	wavh = GetWAVHEADER(f);
 
-	fwrite(&wavh,sizeof(WAVHEADER), 1, f_out);
+	WriteWAVHeaderToFile(&wavh, f_out);
 
 	buffer = (short*)calloc(sizeof(short), 2);
 	if (buffer != NULL)
@@ -142,7 +137,7 @@ int CopyWAVFileAddEffect(char* fname, void(*effect)())
 		int buffer_size = 2;
 		while (fread(buffer, buffer_size, 2, f))
 		{
-			AddEffectOnSample(buffer, &effect);
+			AddEffectOnSample(buffer, effect);
 			fwrite(buffer, buffer_size, 2, f_out);
 		}
 		free(buffer);
