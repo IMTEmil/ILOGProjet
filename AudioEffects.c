@@ -108,34 +108,69 @@ void AddEffectOnSample(short* sample, void(*process)())
 	process(sample);
 }
 
-/*
 int SetHeadToDataStart(
 	FILE* f
 )
 {
 	return fseek(f, 44, SEEK_SET);
 }
-*/
 
-void *GetNextBuffer(
-	FILE *f, 
-	WAVHEADER wavh
+short* GetNextBuffer(
+	FILE* f,
+	WAVHEADER wavh,
+	bool *eof
 )
 {
+	long i = 0;
 	void* Buffer = calloc(wavh.subc.BitsPerSample / 8, wavh.subc.NumChannels);
 
 	if (Buffer != NULL) fread(Buffer, wavh.subc.BitsPerSample / 8, wavh.subc.NumChannels, f);
 
+	*eof = ((uint32_t)(i = ftell(f)) <= wavh.riffh.ChunkSize);
+
 	return Buffer;
 }
 
-void WriteWAVFile(char* fname)
+int WriteWAVFile(char* fname)
 {
-	short *cbuffer = (short*)malloc((size_t)(44100 * 2));
-	uint32_t w_index = 0;
-	uint32_t r_index = 0;
+	FILE* f = NULL;
+	FILE* f_out = NULL;
 
-	free(cbuffer);
+	WAVHEADER wavh = { 0 };
+
+	short* buffer = NULL;
+
+	const char suffix[50] = "o_";
+
+	f = fopen(fname, "rb");
+
+	strcat(suffix, fname);
+
+	f_out = fopen(suffix, "wb");
+
+	if (f == NULL || f_out == NULL) return -1;
+
+	wavh = GetWAVHEADER(f);
+
+	fwrite(&wavh,sizeof(WAVHEADER), 1, f_out);
+
+	buffer = (short*)calloc(sizeof(short), 2);
+	if (buffer != NULL)
+	{
+		int buffer_size = 2;
+		while (fread(buffer, buffer_size, 2, f))
+		{
+			AddEffectOnSample(buffer, &MuteLeft);
+			fwrite(buffer, buffer_size, 2, f_out);
+		}
+		free(buffer);
+	}
+
+	fclose(f_out);
+
+	fclose(f);
+	
+	return 0;
 }
 
 int main(int argc, char** argv)
@@ -157,20 +192,11 @@ int main(int argc, char** argv)
 		// eliminates JUNK wav headers
 		if (memcmp(wavh.subc.Subchunk1Id, "fmt ", sizeof(char) * 4) != 0) return 0;
 
-		fseek(file, 200, SEEK_SET);
-
-		Buffer = GetNextBuffer(file, wavh);
-
-		AddEffectOnSample(Buffer, &MuteSample);
-
-		short sss[2] = { 0 };
-
-		memcpy(sss, Buffer, 2 * sizeof(short));
-
-		free(Buffer);
+		WriteWAVFile(szFileName);
 
 		fclose(file);
 	}
 
 	return 0;
 }
+
