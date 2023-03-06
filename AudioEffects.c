@@ -72,12 +72,6 @@ int WriteWAVHeader(
 	return 0;
 }
 
-void MuteSample(short* sample)
-{
-	(short)*(sample) = 0;
-	(short)*(sample + 1) = 0;
-}
-
 void MuteLeft(short* sample)
 {
 	(short)*(sample) = 0;
@@ -86,6 +80,12 @@ void MuteLeft(short* sample)
 void MuteRight(short* sample)
 {
 	(short)*(sample + 1) = 0;
+}
+
+void MuteSample(short* sample)
+{
+	MuteRight(sample);
+	MuteLeft(sample);
 }
 
 void AddEffectOnSample(short* sample, void(*process)())
@@ -118,13 +118,17 @@ int WriteWAVFile(char* fname)
 
 	short* buffer = NULL;
 
-	const char suffix[50] = "o_";
+	char *szOutput = (char *)malloc((strlen(fname) + 2) * sizeof(char));
+
+	if (szOutput == NULL) return -1;
 
 	f = fopen(fname, "rb");
 
-	strcat(suffix, fname);
+	strcpy_s(szOutput, (strlen(fname) + 2) * sizeof(char), "o_");
 
-	f_out = fopen(suffix, "wb");
+	strcat(szOutput, fname);
+
+	f_out = fopen(szOutput, "wb");
 
 	if (f == NULL || f_out == NULL) return -1;
 
@@ -143,6 +147,8 @@ int WriteWAVFile(char* fname)
 		}
 		free(buffer);
 	}
+
+	free(szOutput);
 
 	fclose(f_out);
 
