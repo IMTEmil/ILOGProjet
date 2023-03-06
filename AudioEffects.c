@@ -42,7 +42,7 @@ typedef struct WAVHEADER
 	SUBCHUNK subc;
 } WAVHEADER;
 
-WAVHEADER GetWAVHEADER(
+static WAVHEADER GetWAVHEADER(
 	FILE *f
 )
 {
@@ -59,7 +59,7 @@ WAVHEADER GetWAVHEADER(
   	return wavh;
 }
 
-size_t WriteWAVHeaderToFile(
+static size_t WriteWAVHeaderToFile(
 	WAVHEADER *wavh,
 	FILE *f
 )
@@ -67,23 +67,23 @@ size_t WriteWAVHeaderToFile(
 	return fwrite(wavh, sizeof(WAVHEADER), 1, f);
 }
 
-void MuteLeftChannel(short* sample)
+static void MuteLeftChannel(short* sample)
 {
 	(short)*(sample) = 0;
 }
 
-void MuteRightChannel(short* sample)
+static void MuteRightChannel(short* sample)
 {
 	(short)*(sample + 1) = 0;
 }
 
-void MuteSample(short* sample)
+static void MuteSample(short* sample)
 {
 	MuteRightChannel(sample);
 	MuteLeftChannel(sample);
 }
 
-void AddEffectOnSample(short* sample, void(*process)())
+static void AddEffectOnSample(short* sample, void(*process)())
 {
 	process(sample);
 }
@@ -129,18 +129,19 @@ int CopyWAVFileAddEffect(char* fname, void(*effect)())
 
 	wavh = GetWAVHEADER(f);
 
-	WriteWAVHeaderToFile(&wavh, f_out);
-
-	buffer = (short*)calloc(sizeof(short), 2);
-	if (buffer != NULL)
+	if (WriteWAVHeaderToFile(&wavh, f_out) > 0)
 	{
-		int buffer_size = 2;
-		while (fread(buffer, buffer_size, 2, f))
+		buffer = (short*)calloc(sizeof(short), 2);
+		if (buffer != NULL)
 		{
-			AddEffectOnSample(buffer, effect);
-			fwrite(buffer, buffer_size, 2, f_out);
+			int buffer_size = 2;
+			while (fread(buffer, buffer_size, 2, f))
+			{
+				AddEffectOnSample(buffer, effect);
+				fwrite(buffer, buffer_size, 2, f_out);
+			}
+			free(buffer);
 		}
-		free(buffer);
 	}
 
 	free(szOutput);
