@@ -42,21 +42,6 @@ typedef struct WAVHEADER
 	SUBCHUNK subc;
 } WAVHEADER;
 
-static int EndianSwap(
-	int nnn
-)
-{
-	int b1, result = 0;
-	b1 = (nnn & 0x00FF);
-	nnn = nnn >> 8;
-	result = b1;
-	b1 = (nnn & 0x00FF);
-	result = (result << 8) | b1;
-	nnn = result;
-
-	return nnn;
-}
-
 WAVHEADER GetWAVHEADER(
 	FILE *f
 )
