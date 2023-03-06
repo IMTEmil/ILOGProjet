@@ -59,7 +59,7 @@ WAVHEADER GetWAVHEADER(
   	return wavh;
 }
 
-int WriteWAVHeader(
+int WriteWAVHeaderToFile(
 	WAVHEADER *wavh, 
 	char *fname,
 	FILE *f
@@ -72,20 +72,20 @@ int WriteWAVHeader(
 	return 0;
 }
 
-void MuteLeft(short* sample)
+void MuteLeftChannel(short* sample)
 {
 	(short)*(sample) = 0;
 }
 
-void MuteRight(short* sample)
+void MuteRightChannel(short* sample)
 {
 	(short)*(sample + 1) = 0;
 }
 
 void MuteSample(short* sample)
 {
-	MuteRight(sample);
-	MuteLeft(sample);
+	MuteRightChannel(sample);
+	MuteLeftChannel(sample);
 }
 
 void AddEffectOnSample(short* sample, void(*process)())
@@ -109,7 +109,7 @@ short* GetNextBuffer(
 	return Buffer;
 }
 
-int WriteWAVFile(char* fname)
+int CopyWAVFileAddEffect(char* fname)
 {
 	FILE* f = NULL;
 	FILE* f_out = NULL;
@@ -142,7 +142,7 @@ int WriteWAVFile(char* fname)
 		int buffer_size = 2;
 		while (fread(buffer, buffer_size, 2, f))
 		{
-			AddEffectOnSample(buffer, &MuteLeft);
+			AddEffectOnSample(buffer, &MuteLeftChannel);
 			fwrite(buffer, buffer_size, 2, f_out);
 		}
 		free(buffer);
@@ -176,7 +176,7 @@ int main(int argc, char** argv)
 		// eliminates JUNK wav headers
 		if (memcmp(wavh.subc.Subchunk1Id, "fmt ", sizeof(char) * 4) != 0) return 0;
 
-		WriteWAVFile(szFileName);
+		CopyWAVFileAddEffect(szFileName);
 
 		fclose(file);
 	}
