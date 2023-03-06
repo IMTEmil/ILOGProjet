@@ -109,7 +109,7 @@ short* GetNextBuffer(
 	return Buffer;
 }
 
-int CopyWAVFileAddEffect(char* fname)
+int CopyWAVFileAddEffect(char* fname, void(*effect)())
 {
 	FILE* f = NULL;
 	FILE* f_out = NULL;
@@ -142,7 +142,7 @@ int CopyWAVFileAddEffect(char* fname)
 		int buffer_size = 2;
 		while (fread(buffer, buffer_size, 2, f))
 		{
-			AddEffectOnSample(buffer, &MuteLeftChannel);
+			AddEffectOnSample(buffer, &effect);
 			fwrite(buffer, buffer_size, 2, f_out);
 		}
 		free(buffer);
@@ -176,7 +176,7 @@ int main(int argc, char** argv)
 		// eliminates JUNK wav headers
 		if (memcmp(wavh.subc.Subchunk1Id, "fmt ", sizeof(char) * 4) != 0) return 0;
 
-		CopyWAVFileAddEffect(szFileName);
+		CopyWAVFileAddEffect(szFileName, &MuteLeftChannel);
 
 		fclose(file);
 	}
