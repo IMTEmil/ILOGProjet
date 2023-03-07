@@ -12,6 +12,6 @@
 #define MuteR MuteRightChannel
 #define MuteAll MuteSample
 
-
+int CopyWAVFileAddEffect(char* szFileName, void(*feffect)());
 
 #endif /*_AUDIO_EFFECTS_H*/

@@ -127,7 +127,7 @@ short* GetNextBuffer(
 	return Buffer;
 }
 
-char* AddOutputPrefix(char* szFileName)
+static char* AddOutputPrefix(char* szFileName)
 {
 	char* szOutput = (char*)malloc((strlen(szFileName) + 3) * sizeof(char));
 
