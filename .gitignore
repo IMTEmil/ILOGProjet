@@ -6,3 +6,6 @@
 *.class
 *.txt
 *.vscode
+o_audio.wav
+*.class
+*.dll
