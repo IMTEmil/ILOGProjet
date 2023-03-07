@@ -3,3 +3,6 @@
 *.vs
 *audio.wav
 *x64
+*.class
+*.txt
+*.vscode
