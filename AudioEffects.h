@@ -6,5 +6,12 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
+
+#define MuteL MuteLeftChannel
+#define MuteR MuteRightChannel
+#define MuteAll MuteSample
+
+
 
 #endif /*_AUDIO_EFFECTS_H*/

@@ -42,6 +42,8 @@ typedef struct WAVHEADER
 	SUBCHUNK subc;
 } WAVHEADER;
 
+static void AddEffectOnSample(short* sample, void(*process)());
+
 static WAVHEADER GetWAVHEADER(
 	FILE *f
 )
@@ -65,6 +67,27 @@ static size_t WriteWAVHeaderToFile(
 )
 {
 	return fwrite(wavh, sizeof(WAVHEADER), 1, f);
+}
+
+static int CopyWAVData(FILE *fin, FILE *fout, void(*feffect))
+{
+	short* buffer = (short*)calloc(sizeof(short), 2);
+
+	if (buffer == NULL) return -1;
+
+	while (fread(buffer, sizeof(short), 2, fin))
+	{
+		AddEffectOnSample(buffer, feffect);
+		if (!(fwrite(buffer, sizeof(short), 2, fout) > 0))
+		{
+			free(buffer);
+			return -1;
+		}
+	}
+
+	free(buffer);
+
+	return 0;
 }
 
 static void MuteLeftChannel(short* sample)
@@ -104,78 +127,62 @@ short* GetNextBuffer(
 	return Buffer;
 }
 
-int CopyWAVFileAddEffect(char* fname, void(*effect)())
+char* AddOutputPrefix(char* szFileName)
 {
-	FILE* f = NULL;
-	FILE* f_out = NULL;
+	char* szOutput = (char*)malloc((strlen(szFileName) + 3) * sizeof(char));
+
+	if (szOutput != NULL)
+	{
+		strcpy_s(szOutput, (strlen(szFileName) + 2) * sizeof(char), "o_");
+
+		strcat(szOutput, szFileName);
+	}
+
+	return szOutput;
+}
+
+int CopyWAVFileAddEffect(char* szFileName, void(*feffect)())
+{
+	FILE* fin = NULL;
+	FILE* fout = NULL;
 
 	WAVHEADER wavh = { 0 };
 
-	short* buffer = NULL;
+	char* szOutputFileName = NULL;
 
-	char *szOutput = (char *)malloc((strlen(fname) + 2) * sizeof(char));
-
-	if (szOutput == NULL) return -1;
-
-	f = fopen(fname, "rb");
-
-	strcpy_s(szOutput, (strlen(fname) + 2) * sizeof(char), "o_");
-
-	strcat(szOutput, fname);
-
-	f_out = fopen(szOutput, "wb");
-
-	if (f == NULL || f_out == NULL) return -1;
-
-	wavh = GetWAVHEADER(f);
-
-	if (WriteWAVHeaderToFile(&wavh, f_out) > 0)
+	fin = fopen(szFileName, "rb");
+	
+	if (fin != NULL)
 	{
-		buffer = (short*)calloc(sizeof(short), 2);
-		if (buffer != NULL)
+		szOutputFileName = AddOutputPrefix(szFileName);
+
+		fout = fopen(szOutputFileName, "wb");
+
+		free(szOutputFileName);
+
+		if (fout != NULL)
 		{
-			int buffer_size = 2;
-			while (fread(buffer, buffer_size, 2, f))
+			wavh = GetWAVHEADER(fin);
+
+			if (WriteWAVHeaderToFile(&wavh, fout) > 0)
 			{
-				AddEffectOnSample(buffer, effect);
-				fwrite(buffer, buffer_size, 2, f_out);
+				CopyWAVData(fin, fout, feffect);
 			}
-			free(buffer);
+
+			fclose(fout);
 		}
+
+		fclose(fin);
 	}
-
-	free(szOutput);
-
-	fclose(f_out);
-
-	fclose(f);
 	
 	return 0;
 }
 
 int main(int argc, char** argv)
 {
-	FILE* file = NULL;
-
-	WAVHEADER wavh = { 0 };
-
-	short* Buffer = NULL;
-
 	char* szFileName = "audio.wav";
 
-	file = fopen(szFileName, "r");
-
-	if (file != NULL)
-	{
-		wavh = GetWAVHEADER(file);
-
-		// eliminates JUNK wav headers
-		if (memcmp(wavh.subc.Subchunk1Id, "fmt ", sizeof(char) * 4) != 0) return 0;
-
-		CopyWAVFileAddEffect(szFileName, &MuteLeftChannel);
-
-		fclose(file);
-	}
+	CopyWAVFileAddEffect(szFileName, &MuteL);
 
 	return 0;
 }
