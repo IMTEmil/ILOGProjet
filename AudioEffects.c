@@ -90,17 +90,17 @@ static int CopyWAVData(FILE *fin, FILE *fout, void(*feffect))
 	return 0;
 }
 
-static void MuteLeftChannel(short* sample)
+void MuteLeftChannel(short* sample)
 {
-	(short)*(sample) = 0;
+	*sample = 0;
 }
 
-static void MuteRightChannel(short* sample)
+void MuteRightChannel(short* sample)
 {
-	(short)*(sample + 1) = 0;
+	*(sample + 1) = 0;
 }
 
-static void MuteSample(short* sample)
+void MuteSample(short* sample)
 {
 	MuteRightChannel(sample);
 	MuteLeftChannel(sample);
