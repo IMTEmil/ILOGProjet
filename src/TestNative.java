@@ -5,9 +5,15 @@ public class TestNative {
     static {
         System.loadLibrary("AudioEffects");
     }
-    
+
+    public static void JCopyWAVFileAddEffect(String szFileName)
+    {
+
+    }
+
     public static void main(String[] args)
     {
-        CopyWAVFileAddEffect("audio.wav", 0x01);
+        System.out.println(args[0]);
+        CopyWAVFileAddEffect(args[0], 0x01);
     }
 }
