@@ -1,4 +1,4 @@
-#include "src/TestNative.h"
+#include "Java/TestNative.h"
 #include "AudioEffects.h"
 
 JNIEXPORT void JNICALL Java_TestNative_CopyWAVFileAddEffect
