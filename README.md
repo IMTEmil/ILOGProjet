@@ -41,6 +41,8 @@ Les paramètres du programme sont les suivants :
  - Si délai choisi : feedback 
  - Si délai choisi : temps du délai
 
+![exemple](https://raw.github.com/IMTEmil/MLODAlgoC/master/MiniProjet/assets/Snake.png)
+
 #### Points abordés
 De façon non exhaustive ce projet aborde les thèmes suivants :
 
