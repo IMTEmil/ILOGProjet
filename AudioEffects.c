@@ -195,7 +195,7 @@ int CopyWAVFileAddEffect(char* szFileName, void(*feffect)(), DELAY_PARAMETERS dp
 	
 	return 0;
 }
-
+/*
 int main(int argc, char** argv)
 {
 	char* szFileName = "audio.wav";
@@ -204,4 +204,4 @@ int main(int argc, char** argv)
 
 	return 0;
 }
-
+*/
