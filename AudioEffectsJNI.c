@@ -2,28 +2,31 @@
 #include "AudioEffects.h"
 
 JNIEXPORT void JNICALL Java_TestNative_CopyWAVFileAddEffect
-(JNIEnv* env, jobject jobj, jstring string, jint n)
+  (JNIEnv * env, jclass class, jstring fileName, jint funcID, jdouble feedback, jint sDelayTime)
 {
-	char* szJString = (char*)(*env)->GetStringUTFChars(env, string, NULL);
+	char* szJString = (char*)(*env)->GetStringUTFChars(env, fileName, NULL);
 
-	void *addFunc = NULL;
+	void *funcAdress = NULL;
 
-	switch (n)
+	DELAY_PARAMETERS dparam = { feedback, sDelayTime };
+
+	switch (funcID)
 	{
+	default:
 	case 0:
-		addFunc = &MuteAll;
+		funcAdress = &MuteSample;
 		break;
 	case 1:
-		addFunc = &MuteL;
+		funcAdress = &MuteLeftChannel;
 		break;
 	case 2:
-		addFunc = &MuteR;
+		funcAdress = &MuteRightChannel;
 		break;
-	default:
-		break;
+	case 3:
+		funcAdress = &Delay;
 	}
 
-	CopyWAVFileAddEffect(szJString, addFunc);
+	CopyWAVFileAddEffect(szJString, funcAdress, dparam);
 
-	(*env)->ReleaseStringUTFChars(env, string, szJString);
+	(*env)->ReleaseStringUTFChars(env, fileName, szJString);
 };

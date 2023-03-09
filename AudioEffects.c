@@ -3,53 +3,6 @@
 // unsafe use of fopen warnings
 #pragma warning(disable:4996)
 
-typedef struct RIFFHEADER
-{
-	char ChunkId[4];
-	
-	uint32_t ChunkSize;
-
-	char Format[4];
-} RIFFHEADER;
-
-typedef struct SUBCHUNK
-{
-	char Subchunk1Id[4];
-
-	uint32_t Subchunk1Size;
-
-	uint16_t AudioFormat;
-
-	short NumChannels;
-
-	uint32_t SampleRate;
-
-	uint32_t ByteRate;
-
-	short BlockAlign;
-
-	short BitsPerSample;
-
-	char Subchunk2Id[4];
-
-	uint32_t Subchunk2Size;
-} SUBCHUNK;
-
-typedef struct WAVHEADER
-{
-	RIFFHEADER riffh;
-
-	SUBCHUNK subc;
-} WAVHEADER;
-
-typedef struct DELAY_PARAMETERS
-{
-	double feedback;
-
-	int sDelayTime;
-
-} DELAY_PARAMETERS;
-
 static void AddEffectOnSample(short* sample, void(*process)());
 
 static WAVHEADER GetWAVHEADER(
@@ -101,7 +54,7 @@ static int CopyWAVData(FILE *fin, FILE *fout, void(*feffect))
 // warnings for buffer overrun
 #pragma warning(disable:6386)
 
-static int Delay(WAVHEADER wavh, FILE* fin, FILE* fout, DELAY_PARAMETERS dparam)
+int Delay(WAVHEADER wavh, FILE* fin, FILE* fout, DELAY_PARAMETERS dparam)
 {
 	unsigned int maxsize = wavh.subc.SampleRate * dparam.sDelayTime * wavh.subc.NumChannels;
 	int read = 0;
@@ -202,7 +155,7 @@ static char* AddOutputPrefix(char* szFileName)
 	return szOutput;
 }
 
-int CopyWAVFileAddEffect(char* szFileName, void(*feffect)(), DELAY_PARAMETERS *dparam)
+int CopyWAVFileAddEffect(char* szFileName, void(*feffect)(), DELAY_PARAMETERS dparam)
 {
 	FILE* fin = NULL;
 	FILE* fout = NULL;
@@ -227,7 +180,7 @@ int CopyWAVFileAddEffect(char* szFileName, void(*feffect)(), DELAY_PARAMETERS *d
 
 			if (WriteWAVHeaderToFile(&wavh, fout) > 0)
 			{
-				if (feffect == Delay)
+				if (feffect == (void *)Delay)
 				{
 					feffect(wavh, fin, fout, dparam);
 				}
@@ -247,7 +200,7 @@ int main(int argc, char** argv)
 {
 	char* szFileName = "audio.wav";
 
-	CopyWAVFileAddEffect(szFileName, &Delay, &(DELAY_PARAMETERS){0.3, 1});
+	CopyWAVFileAddEffect(szFileName, (void*)&Delay, (DELAY_PARAMETERS){0.3, 1});
 
 	return 0;
 }

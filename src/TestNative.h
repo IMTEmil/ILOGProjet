@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     TestNative
  * Method:    CopyWAVFileAddEffect
- * Signature: (Ljava/lang/String;I)V
+ * Signature: (Ljava/lang/String;IDI)V
  */
 JNIEXPORT void JNICALL Java_TestNative_CopyWAVFileAddEffect
-  (JNIEnv *, jclass, jstring, jint);
+  (JNIEnv *, jclass, jstring, jint, jdouble, jint);
 
 #ifdef __cplusplus
 }
