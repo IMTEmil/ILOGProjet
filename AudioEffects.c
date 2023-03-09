@@ -90,6 +90,40 @@ static int CopyWAVData(FILE *fin, FILE *fout, void(*feffect))
 	return 0;
 }
 
+static int CopyWAVDataCB(FILE* fin, FILE* fout, void(*feffect))
+{
+	int maxsize = 44100 / 2;
+	int read = 0;
+	int write = maxsize - 2;
+
+	short sampleToWrite[2] = { 0 };
+
+	short* buffer = (short*)malloc(maxsize * sizeof(short)); // 3 sec buffer of 44100 samples per s
+	if (buffer == NULL) return -1;
+	memset(buffer, 0, maxsize * sizeof(short));
+
+	while (fread(buffer + write, sizeof(short), 2, fin))
+	{
+		sampleToWrite[0] = (short)buffer[read] * 0.2; // delay
+		sampleToWrite[1] = (short)buffer[read + 1] * 0.2; // delay
+
+		sampleToWrite[0] += buffer[write];
+		sampleToWrite[1] += buffer[write + 1];
+
+		read += 2;
+		if (read == maxsize) read = 0;
+
+		write += 2;
+		if (write == maxsize) write = 0;
+
+		fwrite(sampleToWrite, sizeof(short), 2, fout);
+	}
+
+	free(buffer);
+
+	return 0;
+}
+
 void MuteLeftChannel(short* sample)
 {
 	*sample = 0;
@@ -166,7 +200,7 @@ int CopyWAVFileAddEffect(char* szFileName, void(*feffect)())
 
 			if (WriteWAVHeaderToFile(&wavh, fout) > 0)
 			{
-				CopyWAVData(fin, fout, feffect);
+				CopyWAVDataCB(fin, fout, feffect);
 			}
 
 			fclose(fout);
