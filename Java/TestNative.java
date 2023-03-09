@@ -8,6 +8,13 @@ public class TestNative {
 
     public static void main(String[] args)
     {
-        CopyWAVFileAddEffect(args[0], Integer.parseInt(args[1]), Double.parseDouble(args[2]), Integer.parseInt(args[3]));
+        if (args.length == 4)
+        {
+            CopyWAVFileAddEffect(args[0], Integer.parseInt(args[1]), Double.parseDouble(args[2]), Integer.parseInt(args[3]));
+        }
+        if (args.length == 2) 
+        {
+            CopyWAVFileAddEffect(args[0], Integer.parseInt(args[1]), 0, 0);
+        }
     }
 }
