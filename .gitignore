@@ -1,7 +1,6 @@
 *.sln
 *.vcxproj*
 *.vs
-*audio.wav
 *x64
 *.class
 *.txt
