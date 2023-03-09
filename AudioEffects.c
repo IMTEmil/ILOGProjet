@@ -42,6 +42,14 @@ typedef struct WAVHEADER
 	SUBCHUNK subc;
 } WAVHEADER;
 
+typedef struct DELAY_PARAMETERS
+{
+	double feedback;
+
+	int sDelayTime;
+
+} DELAY_PARAMETERS;
+
 static void AddEffectOnSample(short* sample, void(*process)());
 
 static WAVHEADER GetWAVHEADER(
@@ -90,36 +98,55 @@ static int CopyWAVData(FILE *fin, FILE *fout, void(*feffect))
 	return 0;
 }
 
-static int CopyWAVDataCB(FILE* fin, FILE* fout, void(*feffect))
+// warnings for buffer overrun
+#pragma warning(disable:6386)
+
+static int Delay(WAVHEADER wavh, FILE* fin, FILE* fout, DELAY_PARAMETERS dparam)
 {
-	int maxsize = 44100 / 2;
+	unsigned int maxsize = wavh.subc.SampleRate * dparam.sDelayTime * wavh.subc.NumChannels;
 	int read = 0;
-	int write = maxsize - 2;
+	int write = maxsize - wavh.subc.NumChannels;
+	short* buffer = NULL;
 
-	short sampleToWrite[2] = { 0 };
+	short* outputSample = (short*)malloc(sizeof(short) * wavh.subc.NumChannels);
+	if (outputSample == NULL) return -1;
+	memset(outputSample, 0, sizeof(short) * wavh.subc.NumChannels);
 
-	short* buffer = (short*)malloc(maxsize * sizeof(short)); // 3 sec buffer of 44100 samples per s
-	if (buffer == NULL) return -1;
+	buffer = (short*)malloc(maxsize * sizeof(short));
+	if (buffer == NULL)
+	{
+		free(outputSample);
+		return -1;
+	}
 	memset(buffer, 0, maxsize * sizeof(short));
 
-	while (fread(buffer + write, sizeof(short), 2, fin))
+	while (fread(buffer + write, sizeof(short), wavh.subc.NumChannels, fin))
 	{
-		sampleToWrite[0] = (short)buffer[read] * 0.2; // delay
-		sampleToWrite[1] = (short)buffer[read + 1] * 0.2; // delay
+		// delay line
+		for (int i = 0; i < wavh.subc.NumChannels; i++)
+		{
+			outputSample[i] = (short)buffer[read + i];
 
-		sampleToWrite[0] += buffer[write];
-		sampleToWrite[1] += buffer[write + 1];
+			outputSample[i] += (short)buffer[write + i];
 
-		read += 2;
+			if (outputSample[i] >= 32767) outputSample[i] = 32766;
+			if (outputSample[i] <= -32768) outputSample[i] = -32767;
+
+			buffer[write + i] += (short)(buffer[read + i] * dparam.feedback);
+		}
+
+		read += wavh.subc.NumChannels;
 		if (read == maxsize) read = 0;
 
-		write += 2;
+		write += wavh.subc.NumChannels;
 		if (write == maxsize) write = 0;
 
-		fwrite(sampleToWrite, sizeof(short), 2, fout);
+		fwrite(outputSample, sizeof(short), wavh.subc.NumChannels, fout);
 	}
 
 	free(buffer);
+
+	free(outputSample);
 
 	return 0;
 }
@@ -175,7 +202,7 @@ static char* AddOutputPrefix(char* szFileName)
 	return szOutput;
 }
 
-int CopyWAVFileAddEffect(char* szFileName, void(*feffect)())
+int CopyWAVFileAddEffect(char* szFileName, void(*feffect)(), DELAY_PARAMETERS *dparam)
 {
 	FILE* fin = NULL;
 	FILE* fout = NULL;
@@ -200,7 +227,11 @@ int CopyWAVFileAddEffect(char* szFileName, void(*feffect)())
 
 			if (WriteWAVHeaderToFile(&wavh, fout) > 0)
 			{
-				CopyWAVDataCB(fin, fout, feffect);
+				if (feffect == Delay)
+				{
+					feffect(wavh, fin, fout, dparam);
+				}
+				else CopyWAVData(fin, fout, feffect);
 			}
 
 			fclose(fout);
@@ -216,7 +247,7 @@ int main(int argc, char** argv)
 {
 	char* szFileName = "audio.wav";
 
-	CopyWAVFileAddEffect(szFileName, &MuteL);
+	CopyWAVFileAddEffect(szFileName, &Delay, &(DELAY_PARAMETERS){0.3, 1});
 
 	return 0;
 }
